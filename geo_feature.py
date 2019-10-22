@@ -13,7 +13,7 @@ def get_color_image(data, sections=None, colors=None, buffer_radius=0):
     if colors is None:
         colors = config.temperature_colors
     if sections is None:
-        sections = np.arange(data.min(), data.max(), (data.max()-data.min())/20)
+        sections = np.arange(data.min(), data.max(), (data.max() - data.min()) / 20)
     for i in range(len(sections) - 1):
         contours = get_contours(data, sections[i], sections[i + 1])
         if buffer_radius > 0:
@@ -21,7 +21,6 @@ def get_color_image(data, sections=None, colors=None, buffer_radius=0):
         r, g, b = colors[i]
         img = cv2.drawContours(img, contours, -1, (r, g, b), -1)
     return img
-
 
 
 """
@@ -34,7 +33,7 @@ def get_color_image(data, sections=None, colors=None, buffer_radius=0):
 """
 
 
-def get_contours(gray, min_sect, max_sect, ratio=0, min_area=30):
+def get_contours(gray, min_sect, max_sect, ratio=0, min_area=15):
     data = gray.copy()
     binary = np.where(data >= min_sect, 1, 0) * np.where(data <= max_sect, 1, 0)
     binary = np.uint8(binary)
@@ -55,6 +54,8 @@ def get_contours(gray, min_sect, max_sect, ratio=0, min_area=30):
 
 def get_features(data, sections):
     features = []
+    if sections is None:
+        sections = np.arange(data.min(), data.max(), (data.max() - data.min()) / 20)
     for i in range(len(sections) - 1):
         contours = get_contours(data, sections[i], sections[i + 1])
         for contour in contours:
@@ -64,6 +65,10 @@ def get_features(data, sections):
             feature.properties['max_value'] = sections[i + 1]
             features.append(feature)
     return features
+
+
+def get_geojson(data, sections):
+    return geo.dumps(get_features(data, sections))
 
 
 def get_json_list(data, sections):
@@ -116,7 +121,6 @@ def _buffer(contours, radius):
         coordinates = list(p.buffer(radius).exterior.coords)
         contours[i] = __coordinates2contour__(coordinates)
     return contours
-
 
 
 def draw(contour):
